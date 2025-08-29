@@ -16,6 +16,7 @@ local MAX_EVENTS = 100
 local CUSHION_BYTES = 256
 local MAX_BYTES = 4096 - CUSHION_BYTES
 local eventQueue = {}
+local eventSet = {}
 local eventQueueBytes = 0
 local lastSkill = {}
 local lastStatus = {}
@@ -28,15 +29,32 @@ local function getRuntime()
     end
 end
 
+local function containsString(arr, str)
+    for _, value in ipairs(arr) do
+        if value == str then
+            return true -- String found
+        end
+    end
+    return false -- String not found
+end
+
 -- keep a list of events that haven't been flushed yet.
 -- we limit the size and number of the eventQueue to avoid issues with RCON packet size.
 local function pushEvent(line)
+
+    -- no need for identical events.
+    if containsString(eventQueue, line) then
+        return
+    end
 
     -- if the event queue has too many bytes, start forgetting earlier events
     if eventQueueBytes + string.len(line) > MAX_BYTES then
         for i = 1, 10 do
             -- remove a line from the eventQueue and track bytes
             local removed = table.remove(eventQueue, 1)
+            if not removed then
+                break
+            end
             eventQueueBytes = eventQueueBytes - string.len(removed)
             if eventQueueBytes + string.len(line) <= MAX_BYTES then
                 break -- we have enough space now.
@@ -114,7 +132,7 @@ local function _pronoun(p)
 end
 
 local function _isBitten(p)
-    local bodyParts = p:getBodyDamage():getBodyParts();
+    local bodyParts = p:getBodyDamage():getBodyParts()
     for i = 0, BodyPartType.ToIndex(BodyPartType.MAX) - 1 do
         local bodyPart = bodyParts:get(i);
         if bodyPart:bitten() then
@@ -146,6 +164,7 @@ Events.OnClientCommand.Add(function(module, command, player, args)
         return
     end
     if not player or type(args) ~= "table" then
+        print("[RconEvents] OnClientCommand missing data")
         return
     end
 
@@ -171,7 +190,8 @@ Events.OnClientCommand.Add(function(module, command, player, args)
     elseif kind == "AddXP" then
         local p = player
         local fname = _fullName(p)
-        pushEvent(string.format('%s (%s) gained %.2f %s xp.', uname, fname, args.amount, args.perk))
+        lastSkill[uname] = args.perk
+        -- pushEvent(string.format('%s (%s) gained %.2f %s xp.', uname, fname, args.amount, args.perk))
     elseif kind == "OnHitZombie" then
         local p = player
         local fname = _fullName(p)
@@ -179,6 +199,7 @@ Events.OnClientCommand.Add(function(module, command, player, args)
     elseif kind == "OnPlayerGetDamage" then
         local p = player
         local fname = _fullName(p)
+        -- deduplicating events should fix the blood spam
         pushEvent(string.format('%s (%s) suffered %.2f %s.', uname, fname, args.damage, args.damageType))
     elseif kind == "OnCreatePlayer" then
         local p = player
@@ -201,28 +222,28 @@ end)
 local function onServerCommand(author, args)
     local sub = args[1] and args[1]:lower() or ""
 
-    if sub == "readevents" then
+    if sub == "read" then
         print('[RconEvents:' .. getRuntime() .. '] DEBUG ' .. 'onServerCommand:readevents')
         return _readEvents()
-    elseif sub == "popevents" then
+    elseif sub == "pop" then
         print('[RconEvents:' .. getRuntime() .. '] DEBUG ' .. 'onServerCommand:popevent')
         local s = _readEvents()
         eventQueue = {}
         return s
-    elseif sub == "playercount" then
+    elseif sub == "count" then
         local n = getOnlinePlayers():size()
         return tostring(n)
-    elseif sub == "lastskillleveled" then
+    elseif sub == "skill" then
         local out = {}
         for u, s in pairs(lastSkill) do
             table.insert(out, u .. ":" .. (s or "unknown"))
         end
         return table.concat(out, "; ")
-    elseif sub == "gettime" then
+    elseif sub == "time" then
         local gt = getGameTime()
         return string.format("%d/%d/%d %02d:%02d", gt:getDay(), gt:getMonth() + 1, gt:getYear(), gt:getHour(),
             gt:getMinutes())
-    elseif sub == "getplayerstatus" then
+    elseif sub == "status" then
         local list = getOnlinePlayers()
         local out = {}
         for i = 0, list:size() - 1 do
@@ -232,7 +253,7 @@ local function onServerCommand(author, args)
         end
         return table.concat(out, "; ")
     else
-        return "Usage: rconevents <ReadEvents|PopEvents|PlayerCount|LastSkillLeveled|GetTime|GetPlayerStatus>"
+        return "Usage: rconevents <read|pop|count|skill|time|status>"
     end
 end
 
