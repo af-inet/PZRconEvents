@@ -1,0 +1,5 @@
+name=RconEvents
+id=rconevents
+description=Track player events and expose via RCON
+version=1.0
+require=lua_commands
