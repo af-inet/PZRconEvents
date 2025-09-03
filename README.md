@@ -13,9 +13,13 @@ username has exited a vehicle.
 username (Player Name) has died in Riverside. She survived for 0.000 hours, and had 3 kills. Their traits were: Deaf, Illiterate, HighThirst, SlowHealer, SlowLearner, HeartyAppitite, Pacifist, WeakStomach, SundayDriver, Desensitized, EagleEyed, Hunter, ThickSkinned, Athletic, Strong.
 ```
 
+This mod is designed to be used with this discord bot: https://github.com/af-inet/PZDiscordEventPublisher
+
+You can also write your own bot, and simply call `luacmd rconevents flush` through rcon to collect pending events.
+
 ## Installation
 
-Rcon Events relies on https://github.com/asledgehammer/LuaCommands to implement custom Rcon commands.
+Rcon Events relies on https://github.com/asledgehammer/LuaCommands to implement custom RCON commands.
 
 LuaCommands MUST be included before rconevents, like so:
 ```ini
@@ -36,7 +40,7 @@ https://steamcommunity.com/sharedfiles/filedetails/?id=3243738892
 
 RconEvents tracks what players are doing through various built in lua events.
 
-Events (which is just a string message like "Player has joined") are stored in a buffer in a lua runtime, until they are collected by another program through an rcon commands.
+Events (which are just string messages like "PlayerName has joined") are stored in a buffer in the server lua runtime until they are collected by another program through an RCON command.
 
 RCON is often limited to a packet size of 4096 (see: https://github.com/Tiiffi/mcrcon/blob/master/mcrcon.c#L60C9-L60C22 https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#:~:text=4096) -
 therefore, we limit our internal event queue to 4096 bytes, this way the server memory will never leak or return a packet too large.
