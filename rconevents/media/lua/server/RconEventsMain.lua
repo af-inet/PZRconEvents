@@ -81,10 +81,14 @@ Events.OnClientCommand.Add(function(module, command, player, args)
         return
     end
 
-    local uname = player:getUsername() or "unknown"
-    local kind = tostring(args.kind or "unknown")
+    if not args.kind then
+        print("[RconEvents] DEBUG arg.kind was nil")
+    end
 
-    if uname == "unknown" then
+    local uname = player:getUsername()
+    local kind = tostring(args.kind)
+
+    if not uname then
         print("[RconEvents] DEBUG unknown username for " .. kind .. " event")
         return
     end

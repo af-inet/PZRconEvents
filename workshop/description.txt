@@ -1,3 +1,4 @@
-[h1]project-name[/h1]
+[h1]Rcon Events[/h1]
 
-Mod under development...
+Rcon Events tracks what players are doing in your project zomboid server, and then exposes that information through an rcon command.
+

@@ -1,5 +1,6 @@
 name=RconEvents
 id=rconevents
-description=Track player events and expose via RCON
-version=1.0
+description=Rcon Events tracks what players are doing in your project zomboid server, and then exposes that information through an rcon command.
+version=2.0
 require=lua_commands
+poster=poster.png

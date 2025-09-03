@@ -136,6 +136,13 @@ end
 local function init()
     seedKnown()
     Events.EveryOneMinute.Add(handleTick)
+    -- Let's double check after a player dies
+    Events.OnCharacterDeath.Add(function (character) 
+        if not character then return end
+        if not character.isZombie then return end
+        if character:isZombie() then return end
+        handleTick()
+    end)
     handleTick()
 end
 

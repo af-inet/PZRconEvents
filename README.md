@@ -1,19 +1,66 @@
 # rcon-events
 
-Rcon Events is a SERVER SIDE ONLY project zomboid mod (meaning you don't need steam workshop or your users to install the mod, provided you disable checksum).
+Rcon Events tracks what players are doing in your project zomboid server, and then exposes that information through an rcon command.
 
-The goal of the mod is to track what players are doing in the server to a limited extend, and expose that information via RCON commands.
+The rcon command can then be called by an external program which publishes them to discord, so you can get discord notification that look like this:
 
-Once this is done, a discord bot can be written that simply publishes these update to a server
+```txt
+username has left.
+username has joined.
+username has reached level 1 in aiming!
+username has entered a vehicle.
+username has exited a vehicle.
+username (Player Name) has died in Riverside. She survived for 0.000 hours, and had 3 kills. Their traits were: Deaf, Illiterate, HighThirst, SlowHealer, SlowLearner, HeartyAppitite, Pacifist, WeakStomach, SundayDriver, Desensitized, EagleEyed, Hunter, ThickSkinned, Athletic, Strong.
+```
 
-## features
+## Installation
 
-Currently the bot only tracks the following events
+Rcon Events relies on https://github.com/asledgehammer/LuaCommands to implement custom Rcon commands.
 
-- Player join
+LuaCommands MUST be included before rconevents, like so:
+```ini
+Mods=lua_commands;rconevents
+```
 
-- Player leave
+WorkshopItems must include both mods so your users can install them:
+```ini
+WorkshopItems=3243738892;3558944661
+```
 
-- Player death
+Additionally, you MUST have installed the LuaCommands java patch, see:
 
-More events can be added in the future by expanding the tracker capabilites.
+https://steamcommunity.com/sharedfiles/filedetails/?id=3243738892
+
+
+## How it works
+
+RconEvents tracks what players are doing through various built in lua events.
+
+Events (which is just a string message like "Player has joined") are stored in a buffer in a lua runtime, until they are collected by another program through an rcon commands.
+
+RCON is often limited to a packet size of 4096 (see: https://github.com/Tiiffi/mcrcon/blob/master/mcrcon.c#L60C9-L60C22 https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#:~:text=4096) -
+therefore, we limit our internal event queue to 4096 bytes, this way the server memory will never leak or return a packet too large.
+
+## todo
+
+- [ ] allow custom configuration (choose which events, change queue size, etc.)
+- [ ] translations
+- [x] track player death
+- [x] track player joined
+- [x] track player left
+- [x] track player entered a vehicle
+- [x] track player exit a vehicle
+- [x] track player skill level
+
+
+## rcon command usage
+
+**peak** - read events without removing them from the event queue (subsequent peak calls will return the same events)
+```
+luacmd rconevents peak
+```
+
+**flush** - read events AND removing them from the event queue (subsequent flush calls will only return new events)
+```
+luacmd rconevents flush
+```

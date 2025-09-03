@@ -1,0 +1,6 @@
+version=2
+title=RconEvents
+description=track what players are doing in your project zomboid server, and then exposes that information through an rcon command.
+description=
+tags=
+visibility=public

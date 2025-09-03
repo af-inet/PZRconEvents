@@ -1,5 +1,5 @@
 # Makefile for installing the rconevents mod
-.PHONY: install uninstall
+.PHONY: install uninstall publish
 .DEFAULT: install
 
 # Paths
@@ -7,6 +7,7 @@ MOD_NAME = rconevents
 SRC_DIR = $(CURDIR)/$(MOD_NAME)
 DEST_DIR = /c/Users/david/Zomboid/mods/$(MOD_NAME)
 PUB_DIR = /c/Users/david/Zomboid/Workshop/RconEvents/Contents/mods/$(MOD_NAME)
+PUB_DIR = /c/Users/david/Zomboid/Workshop/RconEvents
 
 # Default target: copy mod to destination
 install:
@@ -17,8 +18,10 @@ install:
 
 publish:
 	@echo "Installing $(MOD_NAME) to $(PUB_DIR)..."
-	mkdir -p $(PUB_DIR)
-	cp -r $(SRC_DIR)/* $(PUB_DIR)/
+	mkdir -p $(PUB_DIR)/Contents/mods/$(MOD_NAME)
+	cp -r $(SRC_DIR)/* $(PUB_DIR)/Contents/mods/$(MOD_NAME)
+	cp $(CURDIR)/workshop/preview.png $(PUB_DIR)
+	cp $(CURDIR)/workshop/workshop.txt $(PUB_DIR)
 	@echo "Done."
 
 # Default target: copy mod to destination
