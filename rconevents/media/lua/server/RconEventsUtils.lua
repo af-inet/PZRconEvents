@@ -1,3 +1,5 @@
+local LocationResolver = require("LocationResolver")
+
 function _getRuntime()
     if isServer() then
         return "server"
@@ -65,8 +67,15 @@ function _formatDeathMessage(p)
     local pronoun = _pronoun(p)
     local desc = _sumTraits(p)
     local bit = _isBitten(p)
+    local loc = LocationResolver.resolve(p)
 
-    local msg = string.format('%s (%s) has died.', uname, fname)
+    -- David has died in Riverside.
+    local msg = string.format('%s (%s) has died', uname, fname)
+    if loc then
+        msg = msg .. " in " .. loc
+    end
+    msg = msg .. "."
+
     msg = msg .. string.format(' %s survived for %.3f hours, and had %d kills.', pronoun, hours, k)
 
     -- only add summarized traits if they had any traits.
@@ -89,8 +98,13 @@ function _formatJoinedMessage(p)
     local pronoun = _pronoun(p)
     local desc = _sumTraits(p)
     local bit = _isBitten(p)
+    local loc = LocationResolver.resolve(p)
 
-    local msg = string.format('%s (%s) has joined.', uname, fname)
+    local msg = string.format('%s (%s) has joined', uname, fname)
+    if loc then
+        msg = msg .. " in " .. loc
+    end
+    msg = msg .. "."
     msg = msg .. string.format(' %s has survived for %.3f hours, and has %d kills.', pronoun, hours, k)
 
     -- only add summarized traits if they had any traits.

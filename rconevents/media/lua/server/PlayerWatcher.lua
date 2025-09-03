@@ -1,10 +1,12 @@
 -- media/lua/server/PlayerWatcher.lua
-if not isServer() then return end
+if not isServer() then
+    return
+end
 
 local PlayerWatcher = {
-    known   = {},   -- key -> info
-    onJoinCbs  = {},
-    onLeaveCbs = {},
+    known = {}, -- key -> info
+    onJoinCbs = {},
+    onLeaveCbs = {}
 }
 
 -- === Registration API ===
@@ -18,8 +20,8 @@ end
 
 local function _getOnlinePlayers()
     local arr = ArrayList.new()
-    pcall(function () 
-        local tmp =  getOnlinePlayers()
+    pcall(function()
+        local tmp = getOnlinePlayers()
         if tmp then
             arr = tmp
         end
@@ -32,7 +34,7 @@ local function keyFor(p)
     local id = p:getOnlineID()
     if id == nil then
         id = tostring(p:getUsername() or "") .. ":" ..
-             tostring(p:getDescriptor() and p:getDescriptor():getForename() or "")
+                 tostring(p:getDescriptor() and p:getDescriptor():getForename() or "")
     end
     return tostring(id)
 end
@@ -50,14 +52,16 @@ local function markSeen(p)
     local md = p:getModData()
     if md._seenByMyMod ~= true then
         md._seenByMyMod = true
-        if p.transmitModData then p:transmitModData() end
+        if p.transmitModData then
+            p:transmitModData()
+        end
     end
 end
 
 local function snapshotOnline()
     local arr = _getOnlinePlayers()
     local nowSet = {}
-    for i = 0, arr:size()-1 do
+    for i = 0, arr:size() - 1 do
         local p = arr:get(i)
         local k = keyFor(p)
         nowSet[k] = p
@@ -72,23 +76,29 @@ local function handleTick()
     for k, p in pairs(current) do
         if PlayerWatcher.known[k] == nil then
             local username = tostring(p:getUsername() or "unknown")
-            local steamID  = p.getSteamID and tostring(p:getSteamID() or "") or ""
+            local steamID = p.getSteamID and tostring(p:getSteamID() or "") or ""
             local brandNew = isBrandNewCharacter(p)
 
             print(string.format("[PlayerWatcher] JOIN %s brandNew=%s", username, tostring(brandNew)))
-            if brandNew then markSeen(p) end
+            if brandNew then
+                markSeen(p)
+            end
 
             -- Store info
             PlayerWatcher.known[k] = {
                 username = username,
-                steamID  = steamID,
-                firstSeen = os.time(),
+                steamID = steamID,
+                firstSeen = os.time()
             }
 
             -- Fire callbacks
-            for _,cb in ipairs(PlayerWatcher.onJoinCbs) do
-                local ok, err = pcall(cb, p, { brandNew = brandNew })
-                if not ok then print("[PlayerWatcher] onJoin callback error: "..tostring(err)) end
+            for _, cb in ipairs(PlayerWatcher.onJoinCbs) do
+                local ok, err = pcall(cb, p, {
+                    brandNew = brandNew
+                })
+                if not ok then
+                    print("[PlayerWatcher] onJoin callback error: " .. tostring(err))
+                end
             end
         end
     end
@@ -98,9 +108,11 @@ local function handleTick()
         if current[k] == nil then
             print(string.format("[PlayerWatcher] LEAVE %s", info.username or "unknown"))
             PlayerWatcher.known[k] = nil
-            for _,cb in ipairs(PlayerWatcher.onLeaveCbs) do
+            for _, cb in ipairs(PlayerWatcher.onLeaveCbs) do
                 local ok, err = pcall(cb, k, info)
-                if not ok then print("[PlayerWatcher] onLeave callback error: "..tostring(err)) end
+                if not ok then
+                    print("[PlayerWatcher] onLeave callback error: " .. tostring(err))
+                end
             end
         end
     end
@@ -109,13 +121,13 @@ end
 local function seedKnown()
     PlayerWatcher.known = {}
     local arr = _getOnlinePlayers()
-    for i = 0, arr:size()-1 do
+    for i = 0, arr:size() - 1 do
         local p = arr:get(i)
         local k = keyFor(p)
         PlayerWatcher.known[k] = {
             username = tostring(p:getUsername() or "unknown"),
-            steamID  = p.getSteamID and tostring(p:getSteamID() or "") or "",
-            firstSeen = os.time(),
+            steamID = p.getSteamID and tostring(p:getSteamID() or "") or "",
+            firstSeen = os.time()
         }
     end
 end
